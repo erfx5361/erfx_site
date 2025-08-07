@@ -1,0 +1,18 @@
+project:
+  output-dir: ../templates/posts
+  pre-render: python3 ../pre-render.py
+  post-render: python3 ../post-render.py
+
+format:
+  html:
+    standalone: false
+    toc: false
+    number-sections: false
+    theme: cosmo
+
+
+
+
+
+
+

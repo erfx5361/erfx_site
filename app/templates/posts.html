@@ -1,0 +1,19 @@
+<!-- app/templates/posts.html -->
+{% extends "base.html" %}
+{% block title %}erfx Posts{% endblock %}
+{% block content %}
+<h1>All Posts</h1>
+<div class="row">
+    {% for post in posts %}
+    <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title"><a href="{{ url_for('post', slug=post.slug) }}">{{ post.title }}</a></h5>
+            <!-- <p class="card-text">{{ post.preview }}</p> -->
+            <p class="card-text"><small class="text-muted">Posted on {{ post.date }}</small></p>
+          </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

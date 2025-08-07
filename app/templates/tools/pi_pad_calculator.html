@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Pi-Pad Calculator{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row align-items-center mb-2">
+        <div class="col"></div> <!-- Empty column for left side -->
+        <div class="col text-center">
+            <h2>Pi Pad Calculator</h2>
+        </div>
+        <div class="col text-end">
+            <a href="{{ url_for('tee_pad_calculator') }}" class="btn btn-secondary">Tee Calculator</a>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-3 d-flex flex-wrap align-items-center justify-content-center">
+
+
+            <form method="post" action="">
+                {{ form.hidden_tag() }}
+                
+                <div class="mb-4">
+                    <span class="me-2">Solve for:</span>
+                    {% for subfield in form.calc_mode %}
+                        <input type="radio" class="btn-check" name="calc_mode" id="{{ subfield.id }}" value="{{ subfield.data }}" 
+                               {% if subfield.checked %}checked{% endif %} 
+                               onclick="toggleModes()">
+                        <label class="btn btn-outline-primary" for="{{ subfield.id }}">{{ subfield.label.text }}</label>
+                    {% endfor %}
+                </div>
+
+                <!-- Mode-specific Fields -->
+                <div id="resistor-mode">
+                    <div class="row mb-3">
+                        <label for="attenuation" class="form-label">{{ form.attenuation.label }}</label>
+                        {{ form.attenuation(class="form-control form-control-sm", id="attenuation") }}
+                    </div>
+                </div>
+                
+                <div id="attenuation-mode">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                                <label for="r1_input" class="form-label">{{ form.r1_input.label }}</label>
+                                {{ form.r1_input(class="form-control form-control-sm", id="r1_input") }}
+                        </div>
+                        <div class="col-md-6">
+                                <label for="r2_input" class="form-label">{{ form.r2_input.label }}</label>
+                                {{ form.r2_input(class="form-control form-control-sm", id="r2_input") }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="impedance" class="form-label">{{ form.impedance.label }}</label>
+                    {{ form.impedance(class="form-control form-control-sm", id="impedance") }}
+                    {% for error in form.impedance.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Tolerance and Submit -->
+                <div class="form-check mb-3">
+                    {{ form.use_standard_values(class="form-check-input", id="useStandardValues", onclick="toggleResTol()") }}
+                    <label class="form-check-label" for="useStandardValues">
+                        Use Standard Values
+                    </label>
+                    {% for error in form.use_standard_values.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mb-4 ms-5 me-5" id="resTolSection">
+                    <label for="res_tol" class="form-label">{{ form.res_tol.label }}</label>
+                    {{ form.res_tol(class="form-control form-control-sm", id="res_tol") }}
+                    {% for error in form.res_tol.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="mb-4">
+                    {{ form.submit(class="btn btn-primary w-50 text-center") }}
+                </div>
+                <div class="mb-3">
+                    <button class="btn btn-secondary btn-sm" onclick="clearForms()">Clear Forms</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="col-md-1 d-flex align-items-center justify-content-center">
+            <div class="vr" style="height: 100%;"></div>
+        </div>
+        
+        <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <img src="{{ url_for('static', filename='images/pi-pad-diagram.png') }}" alt="Pi-Pad Diagram" class="img-fluid">
+        </div>
+        
+        <div class="col-md-1 d-flex align-items-center justify-content-center">
+            <div class="vr" style="height: 100%;"></div>
+        </div>
+        
+        <div class="col-md-3 d-flex align-items-center justify-content-center">
+            <form method="post" action="" novalidate>
+                <div class="row mb-3">
+                    <label for="r1" class="form-label">{{ form.r1.label }}</label>
+                    {{ form.r1(id="r1") }}
+                </div>
+                <div class="row mb-3">
+                    <label for="r2" class="form-label">{{ form.r2.label }}</label>
+                    {{ form.r2(id="r2") }}
+                </div>
+                <div class="row mb-3">
+                    <label for="attenuation_output" class="form-label">{{ form.attenuation_output.label }}</label>
+                    {{ form.attenuation_output(id="attenuation_output") }}
+                </div>
+                <div class="row mb-3">
+                    <label for="return_loss" class="form-label">{{ form.return_loss.label }}</label>
+                    {{ form.return_loss(id="return_loss") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4">
+    
+<div class="text-center mb-4">
+    <h3>Power Dissipation</h3>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <form id="powerDissipationForm" method="post" action="" novalidate>
+            {{ pdiss_form.hidden_tag() }}
+        <div class="row mb-3 align-items-end">  
+            <!-- Input Fields -->
+            <div class="col md-4">
+                <label for="input_power" class="form-label">{{ pdiss_form.input_power.label }}</label>
+                {{ pdiss_form.input_power(class="form-control form-control-sm", id="input_power") }}
+                {% for error in pdiss_form.input_power.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="col md-4">
+                <label for="units" class="form-label">{{ pdiss_form.units.label }}</label>
+                {{ pdiss_form.units(class="form-control form-control-sm", id="units") }}
+                {% for error in pdiss_form.units.errors %}
+                <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="col md-4">
+                {{ pdiss_form.submit(class="btn btn-primary text-center") }}
+            </div>
+        </div>
+        </form>
+    </div>
+
+    <!-- <div class='col-md-1'></div> -->
+
+    <div class="col-md-4">
+        <!-- Output Fields -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="power_r2_in" class="form-label">{{ pdiss_form.power_r2_in.label }}</label>
+                {{ pdiss_form.power_r2_in(class="form-control form-control-sm output-field", id="power_r2_in") }}
+            </div>
+            <div class="col-md-4">
+                <label for="power_r1" class="form-label">{{ pdiss_form.power_r1.label }}</label>
+                {{ pdiss_form.power_r1(class="form-control form-control-sm output-field", id="power_r1") }}
+            </div>
+            <div class="col-md-4">
+                <label for="power_r2_out" class="form-label">{{ pdiss_form.power_r2_out.label }}</label>
+                {{ pdiss_form.power_r2_out(class="form-control form-control-sm output-field", id="power_r2_out") }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const resistorMode = document.getElementById('resistor-mode');
+    const attenuationMode = document.getElementById('attenuation-mode');
+    const calcModeInputs = document.querySelectorAll('input[name="calc_mode"]');
+
+    function toggleModes() {
+        const selectedMode = document.querySelector('input[name="calc_mode"]:checked').value;
+        if (selectedMode === 'resistors') {
+            resistorMode.style.display = 'block';
+            attenuationMode.style.display = 'none';
+        } else {
+            resistorMode.style.display = 'none';
+            attenuationMode.style.display = 'block';
+        }
+    }
+
+    calcModeInputs.forEach(input => {
+        input.addEventListener('change', toggleModes);
+    });
+
+    // Initialize the correct mode on page load
+    toggleModes();
+    toggleResTol();
+    clearForms();
+});
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Add calc_mode to formData
+    //const calcMode = document.querySelector('input[name="calc_mode"]:checked').value;
+    //formData.append('calc_mode', calcMode);
+    
+    fetch('/pi_pad_calculator', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update output fields
+        document.getElementById('r1').value = data.r1;
+        document.getElementById('r2').value = data.r2;
+        document.getElementById('attenuation_output').value = data.attenuation_output;
+        document.getElementById('return_loss').value = data.return_loss;
+    });
+});
+
+document.getElementById('powerDissipationForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch('/pi_pad_calculator', {
+        method: 'POST',
+        body: formData,
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            // Update output fields
+            document.getElementById('power_r1').value = data.power_r1;
+            document.getElementById('power_r2_in').value = data.power_r2_in;
+            document.getElementById('power_r2_out').value = data.power_r2_out;
+        })
+        .catch((error) => console.error('Error:', error));
+});
+
+function toggleResTol() {
+    var checkBox = document.getElementById("useStandardValues");
+    var resTolSection = document.getElementById("resTolSection");
+    var resTolInput = document.getElementById("res_tol");
+    if (checkBox.checked) {
+        resTolSection.classList.remove("disabled");
+        resTolInput.readOnly = false;
+        resTolInput.classList.remove("bg-light");
+    } else {
+        resTolSection.classList.add("disabled");
+        resTolInput.readOnly = true;
+        resTolInput.classList.add("bg-light");
+    }
+}
+
+function clearForms() {
+    document.getElementById('impedance').value = '50';
+    document.getElementById('attenuation').value = '';
+    document.getElementById('r1_input').value = '';
+    document.getElementById('r2_input').value = '';
+    document.getElementById('r1').value = '';
+    document.getElementById('r2').value = '';
+    document.getElementById('attenuation_output').value = '';
+    document.getElementById('return_loss').value = '';
+    document.getElementById('input_power').value = '';
+    document.getElementById('units').value = 'dBm';
+    document.getElementById('power_r1').value = '';
+    document.getElementById('power_r2_in').value = '';
+    document.getElementById('power_r2_out').value = '';
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<style>
+.output-field {
+    background-color: #f0f0f0; /* Light gray color */
+}
+</style>
+
+{% endblock %}
