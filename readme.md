@@ -1,4 +1,4 @@
-Simple flask site I am building for a personal website. The site is not currently deployed.
+Simple flask site I am building for a personal website. The site is not fully deployed, but the calculator is available: [https://206.189.78.20/pi_pad_calculator](https://206.189.78.20/pi_pad_calculator).
 
 This repository contains the structure of the site and tools, while the content for posts, about, and home page are stored in a private repository. Anyone who likes the structure or some of the tools can freely replicate. The site includes the following basic sections so far:
 - Home Page
