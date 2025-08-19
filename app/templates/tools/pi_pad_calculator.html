@@ -178,20 +178,10 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const resistorMode = document.getElementById('resistor-mode');
-    const attenuationMode = document.getElementById('attenuation-mode');
+
     const calcModeInputs = document.querySelectorAll('input[name="calc_mode"]');
 
-    function toggleModes() {
-        const selectedMode = document.querySelector('input[name="calc_mode"]:checked').value;
-        if (selectedMode === 'resistors') {
-            resistorMode.style.display = 'block';
-            attenuationMode.style.display = 'none';
-        } else {
-            resistorMode.style.display = 'none';
-            attenuationMode.style.display = 'block';
-        }
-    }
+
 
     calcModeInputs.forEach(input => {
         input.addEventListener('change', toggleModes);
@@ -274,6 +264,19 @@ function clearForms() {
     document.getElementById('power_r1').value = '';
     document.getElementById('power_r2_in').value = '';
     document.getElementById('power_r2_out').value = '';
+}
+
+function toggleModes() {
+    const resistorMode = document.getElementById('resistor-mode');
+    const attenuationMode = document.getElementById('attenuation-mode');
+    const selectedMode = document.querySelector('input[name="calc_mode"]:checked').value;
+    if (selectedMode === 'resistors') {
+        resistorMode.style.display = 'block';
+        attenuationMode.style.display = 'none';
+    } else {
+        resistorMode.style.display = 'none';
+        attenuationMode.style.display = 'block';
+    }
 }
 </script>
 

@@ -1,4 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="markdown-content">
     {{body}}
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    .markdown-content {
+        max-width: 90ch;
+        margin: 0 auto;
+        padding: 1rem;
+        line-height: 1.6;
+    }
+</style>
 {% endblock %}
