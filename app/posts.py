@@ -55,7 +55,6 @@ class Post():
         self.author = kwargs.get('author', 'Unknown')
         self.date = kwargs.get('date', '')
         self.dt_date = datetime.strptime(self.date, '%B %d, %Y')
-        #self.dt_date = kwargs.get('dt_date', '')
         self.categories = kwargs.get('categories', [])
 
     @staticmethod
