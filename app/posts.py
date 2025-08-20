@@ -1,6 +1,7 @@
 import os, json, re
 import sys
 from os.path import dirname, abspath
+from datetime import datetime
 sys.path.append(dirname(dirname(abspath(__file__))))
 from config import appdir
 
@@ -53,7 +54,8 @@ class Post():
         self.source = kwargs.get('source', Post.post_dir + self.post_html_file)
         self.author = kwargs.get('author', 'Unknown')
         self.date = kwargs.get('date', '')
-        self.dt_date = kwargs.get('dt_date', '')
+        self.dt_date = datetime.strptime(self.date, '%B %d, %Y')
+        #self.dt_date = kwargs.get('dt_date', '')
         self.categories = kwargs.get('categories', [])
 
     @staticmethod

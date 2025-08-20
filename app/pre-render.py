@@ -60,11 +60,15 @@ def extract_metadata(file_path):
             key, value = line.split(':', 1)
             metadata[key.strip()] = value.strip().strip('"')
     try:
+        print(metadata.get('date'))
         metadata['dt_date'] = datetime.strptime(metadata.get('date', ''), '%B %d, %Y')
     except ValueError:
         raise ValueError(f"Date format is incorrect in file: {file_path} - got: {metadata.get('date')}")
     metadata['post_html_file'] = file_path.replace(file_path.split('.')[-1], 'html')
     metadata['categories'] = categories
+    print(metadata['post_html_file'])
+    print(metadata['dt_date'])
+    print(f"type-dt: {type(metadata['dt_date'])}")
     return metadata
 
 
@@ -90,6 +94,10 @@ def main():
         # Replace existing post with the same title
         existing_posts = [p for p in existing_posts if p.title != post_to_render.title]
         existing_posts.append(post_to_render)
+        for p in existing_posts:
+            print(f'post: {p.title}')
+            print(f'dt: {p.dt_date}')
+            print(f'type-dt: {type(p.dt_date)}')
 
     # write all rendered posts to json
     write_posts_to_json([p for p in existing_posts], json_path)
