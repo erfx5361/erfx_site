@@ -74,10 +74,8 @@ class PiPadDissipationForm(FlaskForm):
 
 
     def populate_pi_pad_dissipation(self, pi_atten):
-        power_r2_in, power_r1, power_r2_out = pi_atten.get_dissipation(
-                                                self.input_power.data,
-                                                self.units.data,
-                                                )
+        power_r2_in, power_r1, power_r2_out = pi_atten.get_dissipation(self.input_power.data, \
+                                                                       self.units.data)
         return jsonify({
             'power_r1': power_r1,
             'power_r2_in': power_r2_in,

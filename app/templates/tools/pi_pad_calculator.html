@@ -219,13 +219,36 @@ document.querySelector('form').addEventListener('submit', function(e) {
 document.getElementById('powerDissipationForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    const formData = new FormData(this);
+    // Get data from both forms
+    const pdissForm = new FormData(this);
+    const pipadForm = new FormData(document.querySelector('form')); // Assuming the first form is the pipad_form
 
+    // Combine both forms into a single FormData object
+    const combinedFormData = new FormData();
+    pipadForm.forEach((value, key) => {
+        if (key !== 'csrf_token' & key !== 'form_type') { // Exclude the CSRF token from pipad_form
+            combinedFormData.append(key, value);
+        }
+    });
+    pdissForm.forEach((value, key) => combinedFormData.append(key, value)); // Include pdiss_form data
+
+    // Manually append output fields from pipad_form
+    combinedFormData.append('r1', document.getElementById('r1').value);
+    combinedFormData.append('r2', document.getElementById('r2').value);
+    combinedFormData.append('attenuation_output', document.getElementById('attenuation_output').value);
+    combinedFormData.append('return_loss', document.getElementById('return_loss').value);
+
+    // Send the combined data to the server
     fetch('/pi_pad_calculator', {
         method: 'POST',
-        body: formData,
+        body: combinedFormData,
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then((data) => {
             // Update output fields
             document.getElementById('power_r1').value = data.power_r1;

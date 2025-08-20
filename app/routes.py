@@ -57,10 +57,11 @@ def posts():
     return render_template('posts.html', title='Posts', posts=site_posts.sorted_posts)
 
 
-pi_atten = calculate.Pi_Atten()
+
 
 @app.route('/pi_pad_calculator', methods=['GET', 'POST'])
 def pi_pad_calculator():
+	pi_atten = calculate.Pi_Atten()
 	form_type = request.form.get('form_type')
 	pipad_form = PiPadForm()
 	pdiss_form = PiPadDissipationForm()
@@ -74,15 +75,13 @@ def pi_pad_calculator():
 			print(pipad_form.errors)
 
 	elif form_type == 'pdiss_form':
-		if pi_atten.defined == False:
-			print('Pi attenuator not populated')
-		elif pdiss_form.validate_on_submit():
+		if pdiss_form.validate_on_submit():
+			# both forms are submitted, and we load pi-pad output forms into object
+			pi_atten.define_output_from_form(request.form)
 			return pdiss_form.populate_pi_pad_dissipation(pi_atten)
 		else:
 			print('dissipation validation failed')
 			print(pdiss_form.errors)
-			#test
-			flash('Error in form submission. Please check your inputs.', 'danger')
 	
 	return render_template('tools/pi_pad_calculator.html', form=pipad_form, pdiss_form=pdiss_form)
 

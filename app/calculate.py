@@ -61,6 +61,15 @@ class Pi_Atten(Attenuator):
         self.defined = True
 
 
+    def define_output_from_form(self, form):
+        # load pi-pad output values into pdiss_form
+        self.outputs['r1'] = float(form.get('r1'))
+        self.outputs['r2'] = float(form.get('r2'))
+        self.outputs['attenuation'] = float(form.get('attenuation_output'))
+        self.outputs['return_loss'] = float(form.get('return_loss'))
+        self.z0 = float(form.get('impedance'))
+
+
     def pi_pad(self):
         if self.calc_mode == 'attenuation':
             self.solve_attenuation()
