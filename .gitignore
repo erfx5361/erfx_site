@@ -126,6 +126,7 @@ dmypy.json
 /app/md_content/
 /app/static/posts/
 /app/posts.json
+/app/quarto_posts/images
 
 # quarto posts
 *.qmd

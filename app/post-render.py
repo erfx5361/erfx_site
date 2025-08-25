@@ -1,5 +1,4 @@
-import os
-import shutil
+import os, shutil, re
 
 def cut_paste_dir(source_dir, destination_dir):
     """
@@ -24,7 +23,7 @@ def cut_paste_dir(source_dir, destination_dir):
 
 
 def move_post_files(file, output_dir, posts_static_dir):
-    file_name = file.split('.')[0]
+    file_name = os.path.splitext(file)[0]
     file_name_files_dir = file_name + '_files'
 
     # Construct the source and destination paths
@@ -34,27 +33,26 @@ def move_post_files(file, output_dir, posts_static_dir):
     cut_paste_dir(source_path, destination_path)
 
 
-def update_paths(file, output_dir, posts_static_dir):
-    file_name = file.split('.')[0]
+def fix_file_for_flask(file, output_dir, posts_static_dir):
+    file_name = os.path.splitext(file)[0]
     file_name_files_dir = file_name + '_files/'
-    fpath_name = os.path.join(output_dir, file)
+    file_path = os.path.join(output_dir, file)
 
-    with open(fpath_name, 'r') as f:
+    with open(file_path, 'r') as f:
         content = f.read()
 
+    # replace quarto static file location with flask location
     updated_content = content.replace(f'{file_name_files_dir}', f'{posts_static_dir}')
+    # apply flask site styling override
+    updated_content = apply_flask_styling(updated_content)
+    # replace quarto image links with flask image links
+    updated_content = update_image_links(updated_content)
 
-    with open(fpath_name, 'w') as f:
+    with open(file_path, 'w') as f:
         f.write(updated_content)
 
 
-def apply_jinja_template(file, output_dir):
-    # Construct the full file path
-    file_path = os.path.join(output_dir, file)
-
-    # Read the existing content of the file
-    with open(file_path, 'r') as f:
-        content = f.read()
+def apply_flask_styling(content):
 
     # define Jinja template lines
     include_navbar = '{% include "_navbar.html" %}'
@@ -77,29 +75,47 @@ def apply_jinja_template(file, output_dir):
     if not navbar_inserted:
         raise ValueError("No <body> tag found in the file.")
     
-    # join the updated content back into a single string
     updated_content = '\n'.join(updated_content)
-
-    # Write the updated content back to the file
-    with open(file_path, 'w') as f:
-        f.write(updated_content)
+    return updated_content
 
 
+def update_image_links(content):
+    image_link_template = "{{ url_for('static', filename='') }}"
+    updated_content = content.splitlines()
+    # match image links from quarto posts
+    for index, line, in enumerate(content.splitlines()):
+        if line.startswith('<img'):
+            print(f'image line found: {line}')
+            # regex requires no spaces or double quotes in filenames
+            match = re.search(r'src="(images/.*)" ', line)
+            if match:
+                src = match.group(1)
+                print(f'match found: {src}')
+                updated_src = image_link_template.replace("''", "'"+'posts/'+src+"'")
+                updated_line = line.replace(src, updated_src)
+                print(f'updated image line: {updated_line}')
+                updated_content[index] = updated_line
+    updated_content = '\n'.join(updated_content)
+    return updated_content
 
 
 def main():
     print('Running post-render.py')
-
+    # list of files rendered
     output_files = os.getenv('QUARTO_PROJECT_OUTPUT_FILES').split('\n')
+    # directory of rendered files
     output_dir = os.getenv('QUARTO_PROJECT_OUTPUT_DIR')
+    # new directory for rendered files to integrate into flask site
     posts_static_dir = '../static/posts/'
+    posts_images_dir = '../static/posts/images/'
     os.makedirs(posts_static_dir, exist_ok=True)
 
     for f in output_files:
         f = f.split('/')[-1]
-        update_paths(f, output_dir, posts_static_dir)
-        apply_jinja_template(f, output_dir)
+        fix_file_for_flask(f, output_dir, posts_static_dir)
         move_post_files(f, output_dir, posts_static_dir)
+    # move image files to flask location
+    cut_paste_dir(os.path.join(output_dir, 'images'), posts_images_dir)
         
 
 if __name__ == "__main__":

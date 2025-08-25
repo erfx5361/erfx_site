@@ -158,24 +158,18 @@ class Pi_Atten(Attenuator):
             p_in = p_in / 1000
         
         v_in_rms = np.sqrt(p_in*self.z0)
-        #print(f'Input RMS Voltage: {v_in_rms} V')
         a = 10**(-self.outputs['attenuation']/20)
         v_out_rms = v_in_rms*a
-        #print(f'Output RMS Voltage: {v_out_rms} V')
 
         i_r2_in = v_in_rms / self.outputs['r2']
-        #print(f'R2 Input Current: {i_r2_in} A')
         i_r1 = (v_in_rms - v_out_rms) / self.outputs['r1']
-        #print(f'R1 Current: {i_r1} A')
         i_r2_out = v_out_rms / self.outputs['r2']
 
         r2_in = round(i_r2_in**2 * self.outputs['r2'] * 1000, 2)
         r1 = round(i_r1**2 * self.outputs['r1'] * 1000, 2)
         r2_out = round(i_r2_out**2 * self.outputs['r2'] * 1000, 2)
 
-        #print(f'Power Dissipated (sum of Rs): {r2_in+r1+r2_out} mW')
         p_out = v_out_rms**2 / self.z0 * 1000
-        #print(f'Power Out: {p_out} mW')
 
         return r2_in, r1, r2_out
 
