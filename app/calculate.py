@@ -174,6 +174,120 @@ class Pi_Atten(Attenuator):
         return r2_in, r1, r2_out
 
 
+class T_Atten(Attenuator):
+
+    def __init__(self, calc_mode='resistors', attenuation=float(), impedance=float(),
+                 use_standard_values=True, res_tol='1%', r1=float(), r2=float()):
+        super().__init__(calc_mode, attenuation, impedance,
+                         use_standard_values, res_tol, r1, r2)
+
+    # ----- form helpers to keep parity with Pi_Atten -----
+    def define_from_form(self, form):
+        self.calc_mode = form.calc_mode.data
+        if self.calc_mode == 'resistors':
+            # user will provide attenuation (to compute r1, r2)
+            self.attenuation = float(form.attenuation.data)
+        else:
+            # user provides resistors (to compute attenuation)
+            self.r1 = float(form.r1_input.data)
+            self.r2 = float(form.r2_input.data)
+        self.z0 = float(form.impedance.data)
+        self.use_standard_values = form.use_standard_values.data
+        self.res_tol = form.res_tol.data
+        self.defined = True
+
+    def define_output_from_form(self, form):
+        self.outputs['r1'] = float(form.get('r1'))
+        self.outputs['r2'] = float(form.get('r2'))
+        self.outputs['attenuation'] = float(form.get('attenuation_output'))
+        self.outputs['return_loss'] = float(form.get('return_loss'))
+        self.z0 = float(form.get('impedance'))
+
+    # ----- public runners -----
+    def t_pad(self):
+        if self.calc_mode == 'attenuation':
+            # given r1, r2 -> compute attenuation
+            self.solve_attenuation()
+        else:
+            # given attenuation -> compute r1, r2
+            self.solve_resistors()
+
+        self.solve_zin()
+        self.solve_return_loss()
+
+    def get_t_pad(self):
+        self.t_pad()
+        return (self.outputs['r1'],
+                self.outputs['r2'],
+                self.outputs['attenuation'],
+                self.outputs['return_loss'])
+
+    # ----- core solvers -----
+    def solve_resistors(self):
+        """
+        Given desired attenuation (dB) and z0, compute r1 and r2 using:
+            a = 10**(-atten/20)
+            r1 = -2*a*z0 / (a**2 - 1)
+            r2 = (-a*z0 + z0) / (a + 1)
+        """
+        z0 = self.z0
+        a = 10**(-self.attenuation/20)
+
+        r1 = (-2*a*z0) / (a**2 - 1)
+        r2 = (z0*(1 - a)) / (a + 1)
+
+        # round to 2 decimals like Pi_Atten, then optionally snap to E-series
+        r1 = round(r1, 2)
+        r2 = round(r2, 2)
+
+        if self.use_standard_values:
+            r1, r2 = get_standard_values(r1, r2, self.res_tol)
+
+        self.outputs['r1'] = r1
+        self.outputs['r2'] = r2
+        self.outputs['attenuation'] = round(self.attenuation, 2)
+
+    def solve_attenuation(self):
+        """
+        Given r1, r2, z0, compute attenuation using:
+            a = r1 / (r1 + r2 + z0)
+            attenuation_dB = -20*log10(a)
+        """
+        z0 = self.z0
+        r1 = self.r1
+        r2 = self.r2
+
+        if self.use_standard_values:
+            r1, r2 = get_standard_values(r1, r2, self.res_tol)
+
+        # linear voltage ratio
+        a = r1 / (r1 + r2 + z0)
+
+        attenuation = -20.0 * np.log10(a)
+
+        self.outputs['attenuation'] = round(attenuation, 2)
+        self.outputs['r1'] = r1
+        self.outputs['r2'] = r2
+
+    def solve_zin(self):
+        """
+        Use:
+            z_in = r2 + (r1*(r2 + z0)) / (r1 + r2 + z0)
+        """
+        r1, r2 = self.outputs['r1'], self.outputs['r2']
+        z0 = self.z0
+        zin = r2 + (r1 * (r2 + z0)) / (r1 + r2 + z0)
+        self.outputs['zin'] = zin
+
+    def solve_return_loss(self):
+        zin = self.outputs['zin']
+        z0 = self.z0
+        self.outputs['return_loss'] = round(-20 * np.log10(abs(zin - z0) / abs(zin + z0)), 2)
+
+    # power dissipation to go here..
+
+
+
 def get_standard_values(r1, r2, res_tol):
     r1 = min(resistors[res_tol], key=lambda x: abs(x - r1))
     r2 = min(resistors[res_tol], key=lambda x: abs(x - r2))
