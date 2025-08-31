@@ -9,6 +9,7 @@ format:
     toc: false
     number-sections: false
     theme: cosmo
+    highlight-style: atom-one
 
 
 
